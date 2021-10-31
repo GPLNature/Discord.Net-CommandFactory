@@ -6,21 +6,6 @@ using Discord;
 
 namespace CommandFactory
 {
-  internal class ParameterMappingException : Exception
-  {
-    public ParameterMappingException()
-    {
-    }
-
-    public ParameterMappingException(string? message) : base(message)
-    {
-    }
-
-    public ParameterMappingException(string? message, Exception? innerException) : base(message, innerException)
-    {
-    }
-  }
-  
   internal class ParameterChecker
   {
     private static readonly ReadOnlyDictionary<Type, ApplicationCommandOptionType> Mapper = new(new Dictionary<Type, ApplicationCommandOptionType> {

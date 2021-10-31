@@ -8,13 +8,17 @@ namespace CommandFactoryTest
   public class CommandTest : SlashModule
   {
     [Execute]
-    public async Task test()
+    public async Task test(int yea)
     {
     }
 
     [SubCommandGroup("ping!")]
-    public class Ping
+    public class Ping : SlashModule
     {
+      [Execute]
+      public async Task ping(int yea)
+      {
+      }
     }
   }
 }
