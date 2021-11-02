@@ -9,6 +9,7 @@ namespace CommandFactoryTest
     static async Task Main(string[] args)
     {
       var init = await CommandFactory.CommandManager.Init(Assembly.GetEntryAssembly());
+      await init.BuildAndInstallModulesAsync();
       Console.WriteLine();
     }
   }

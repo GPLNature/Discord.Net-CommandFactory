@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using CommandFactory.Attributes;
 using CommandFactory.Exception;
 using CommandFactory.Info;
-using Discord.WebSocket;
 using ParameterInfo = CommandFactory.Info.ParameterInfo;
 
 namespace CommandFactory
@@ -42,7 +41,9 @@ namespace CommandFactory
           IsValidExecutorDefinition(info) || IsValidSubCommandDefinition(info));
       var commandAttribute = commandClass.GetCustomAttribute<CommandAttribute>();
       var commandName = commandAttribute?.Name ?? throw new LoadException("Command Name can't be empty string or null");
-      var description = commandClass.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "";
+      var description = commandClass.GetCustomAttribute<DescriptionAttribute>()?.Description ?? throw new LoadException("Description cannot be blank or null");
+      if (description.Length == 0)
+        throw new LoadException("Description cannot be blank or null");
 
       // Build SubCommandGroup
       var subGroups = new List<SubModuleInfo>();
@@ -53,19 +54,16 @@ namespace CommandFactory
       }
 
       // Build Commands
-      var commands = commandMethods.Select(BuildCommand).ToList();
-      var executors = commands.Where(x => x.Type == CommandType.Executor).ToList();
-      var subCommands = commands.Where(x => x.Type == CommandType.SubCommand).ToList();
+      var executors = commandMethods.Where(IsValidExecutorDefinition).FirstOrDefault();
+      var subCommands = commandMethods.Where(IsValidSubCommandDefinition).Select(BuildSubCommand).ToList();
 
-      if (executors.Count > 1)
-        throw new TooManyExecutorException($"Too Many Executor Methods on {commandName}");
-
-      if (!executors.Any())
+      if (executors == null)
         throw new EmptyExecutorException($"Empty Executor Methods on {commandName}");
 
-      var executor = executors.First();
+      var executor = BuildCommand(commandName, description, executors);
 
-      var instance = Activator.CreateInstance(commandClass) as SlashModule ?? throw new LoadException($"Can't create instance of {commandClass.FullName}");
+      var instance = Activator.CreateInstance(commandClass) as SlashModule ??
+                     throw new LoadException($"Can't create instance of {commandClass.FullName}");
 
       return new ModuleInfo(commandName, description, instance, executor, subCommands, subGroups);
     }
@@ -74,11 +72,13 @@ namespace CommandFactory
     {
       var subGroupTypes = groupClass.DeclaredNestedTypes
         .Where(IsValidSubGroups);
-      
+
       var subCommandMethods = groupClass.DeclaredMethods.Where(IsValidSubCommandDefinition);
       var commandAttribute = groupClass.GetCustomAttribute<SubCommandGroupAttribute>();
       var commandName = commandAttribute?.Name ?? throw new LoadException("Command Name can't be empty string or null");
-      var description = groupClass.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "";
+      var description = groupClass.GetCustomAttribute<DescriptionAttribute>()?.Description ?? throw new LoadException("Description cannot be blank or null");
+      if (description.Length == 0)
+        throw new LoadException("Description cannot be blank or null");
       
       // Build SubCommandGroup
       var subGroups = new List<SubModuleInfo>();
@@ -87,29 +87,30 @@ namespace CommandFactory
       {
         subGroups.Add(BuildSubModule(subGroup));
       }
-      
+
       // Build Command
-      var commands = subCommandMethods.Select(BuildCommand).Where(x => x.Type == CommandType.SubCommand).ToList();
-      
-      var instance = Activator.CreateInstance(groupClass) as SubSlashGroupModule ?? throw new LoadException($"Can't create instance of {groupClass.FullName}");
-      
+      var commands = subCommandMethods.Select(BuildSubCommand).ToList();
+
+      var instance = Activator.CreateInstance(groupClass) as SubSlashGroupModule ??
+                     throw new LoadException($"Can't create instance of {groupClass.FullName}");
+
       return new SubModuleInfo(commandName, description, instance, commands, subGroups);
     }
 
-    private static CommandInfo BuildCommand(MethodInfo info)
+    private static CommandInfo BuildSubCommand(MethodInfo info)
+    {
+      return BuildCommand(info.Name, string.Empty, info);
+    }
+
+    private static CommandInfo BuildCommand(string name, string description, MethodInfo info)
     {
       var attributes = info.GetCustomAttributes();
-
-      var name = string.Empty;
-      var description = string.Empty;
-      var type = CommandType.Executor;
 
       foreach (var attribute in attributes) // check the attribute of method
       {
         switch (attribute)
         {
           case SubCommandAttribute subCommandAttr:
-            type = CommandType.SubCommand;
             name = subCommandAttr.Name;
             break;
           case DescriptionAttribute descriptionAttr:
@@ -118,9 +119,12 @@ namespace CommandFactory
         }
       }
 
+      if (description.Length == 0)
+        throw new LoadException($"Description cannot be blank or null on {info.Name}");
+
       var parameters = BuildParameter(info);
 
-      return new CommandInfo(name, description, info, parameters, type);
+      return new CommandInfo(name, description, info, parameters);
     }
 
     private static List<ParameterInfo> BuildParameter(MethodInfo info)
@@ -135,8 +139,12 @@ namespace CommandFactory
           throw new ParameterMappingException(
             $"Parameter can't match type on {info.Name} method parameter name : {parameter.Name}");
         var description = parameter.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "";
+        
+        if (description.Length == 0)
+          throw new LoadException("Description cannot be blank or null");
 
-        parameters.Add(new ParameterInfo(parameter.Name ?? "Unknown", description, optionType.Value));
+        parameters.Add(new ParameterInfo(parameter.Name ?? "Unknown", description, optionType.Value,
+          parameter.DefaultValue, parameter.IsOptional));
       }
 
       return parameters;
@@ -162,7 +170,7 @@ namespace CommandFactory
       typeInfo.DeclaredMethods.Any(info => IsValidExecutorDefinition(info) || IsValidExecutorDefinition(info)) &&
       typeInfo.GetCustomAttribute<CommandAttribute>() != null;
 
-    private static bool IsValidSubGroups(TypeInfo typeInfo) => 
+    private static bool IsValidSubGroups(TypeInfo typeInfo) =>
       SubModuleTypeInfo.IsAssignableFrom(typeInfo) &&
       typeInfo.DeclaredMethods.Any(IsValidSubCommandDefinition) &&
       typeInfo.GetCustomAttribute<SubCommandGroupAttribute>() != null;

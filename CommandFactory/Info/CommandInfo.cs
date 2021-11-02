@@ -9,15 +9,13 @@ namespace CommandFactory.Info
     public readonly string Description;
     public readonly MethodInfo Method;
     public readonly List<ParameterInfo> Parameters;
-    public readonly CommandType Type;
 
-    public CommandInfo(string name, string description, MethodInfo method, List<ParameterInfo> parameters, CommandType type)
+    public CommandInfo(string name, string description, MethodInfo method, List<ParameterInfo> parameters)
     {
       Name = name;
       Description = description;
       Method = method;
       Parameters = parameters;
-      Type = type;
     }
   }
 }
