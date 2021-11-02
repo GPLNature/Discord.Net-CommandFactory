@@ -1,12 +1,15 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace CommandFactoryTest
 {
   class Program
   {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
-      CommandFactory.CommandManager.Init(Assembly.GetEntryAssembly());
+      var init = await CommandFactory.CommandManager.Init(Assembly.GetEntryAssembly());
+      Console.WriteLine();
     }
   }
 }
