@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Reflection;
 
 namespace CommandFactory.Info
@@ -8,14 +9,14 @@ namespace CommandFactory.Info
     public readonly string Name;
     public readonly string Description;
     public readonly MethodInfo Method;
-    public readonly List<ParameterInfo> Parameters;
+    public readonly ImmutableList<ParameterInfo> Parameters;
 
     public CommandInfo(string name, string description, MethodInfo method, List<ParameterInfo> parameters)
     {
       Name = name;
       Description = description;
       Method = method;
-      Parameters = parameters;
+      Parameters = parameters.ToImmutableList();
     }
   }
 }

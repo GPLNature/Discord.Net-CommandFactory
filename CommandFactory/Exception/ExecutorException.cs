@@ -29,4 +29,15 @@
     {
     }
   }
+  
+  internal class ReceivedDataException: System.Exception
+  {
+    public ReceivedDataException(string? message) : base(message)
+    {
+    }
+
+    public ReceivedDataException(string? message, System.Exception? innerException) : base(message, innerException)
+    {
+    }
+  }
 }

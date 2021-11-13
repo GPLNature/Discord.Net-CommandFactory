@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace CommandFactory.Info
 {
@@ -7,16 +8,16 @@ namespace CommandFactory.Info
     public readonly string Name;
     public readonly string Description;
     public readonly SubSlashGroupModule Module;
-    public readonly List<CommandInfo> SubCommands;
-    public readonly List<SubModuleInfo> SubGroups;
+    public readonly ImmutableDictionary<string, CommandInfo> SubCommands;
+    public readonly ImmutableDictionary<string, SubModuleInfo> SubGroups;
 
     public SubModuleInfo(string name, string description, SubSlashGroupModule module, List<CommandInfo> subCommands, List<SubModuleInfo> subGroups)
     {
       Name = name;
       Description = description;
       Module = module;
-      SubCommands = subCommands;
-      SubGroups = subGroups;
+      SubCommands = subCommands.ToImmutableDictionary(x => x.Name);
+      SubGroups = subGroups.ToImmutableDictionary(x => x.Name);
     }
   }
 }

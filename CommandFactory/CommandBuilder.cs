@@ -11,7 +11,7 @@ using ParameterInfo = CommandFactory.Info.ParameterInfo;
 
 namespace CommandFactory
 {
-  internal class CommandBuilder
+  internal static class CommandBuilder
   {
     private static readonly TypeInfo ModuleTypeInfo = typeof(SlashModule).GetTypeInfo();
     private static readonly TypeInfo SubModuleTypeInfo = typeof(SubSlashGroupModule).GetTypeInfo();
