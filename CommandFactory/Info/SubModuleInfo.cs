@@ -11,7 +11,8 @@ namespace CommandFactory.Info
     public readonly ImmutableDictionary<string, CommandInfo> SubCommands;
     public readonly ImmutableDictionary<string, SubModuleInfo> SubGroups;
 
-    public SubModuleInfo(string name, string description, SubSlashGroupModule module, List<CommandInfo> subCommands, List<SubModuleInfo> subGroups)
+    public SubModuleInfo(string name, string description, SubSlashGroupModule module, List<CommandInfo> subCommands,
+      List<SubModuleInfo> subGroups)
     {
       Name = name;
       Description = description;

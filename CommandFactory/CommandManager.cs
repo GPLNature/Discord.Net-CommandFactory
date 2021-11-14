@@ -15,7 +15,7 @@ namespace CommandFactory
 {
   public class CommandManager
   {
-    private ImmutableDictionary<string, ModuleInfo> _module;
+    private readonly ImmutableDictionary<string, ModuleInfo> _module;
 
     internal CommandManager(List<ModuleInfo> moduleInfos)
     {
@@ -38,14 +38,9 @@ namespace CommandFactory
 
         // Build Options
         foreach (var parameter in module.Executor.Parameters)
-        {
           command.AddOption(parameter.Name, parameter.OptionType, parameter.Description, parameter.IsRequire);
-        }
-        
-        foreach (var subGroup in module.SubGroups)
-        {
-          command.AddOption(await BuildGroups(subGroup.Value));
-        }
+
+        foreach (var subGroup in module.SubGroups) command.AddOption(await BuildGroups(subGroup.Value));
 
         try
         {
@@ -75,27 +70,29 @@ namespace CommandFactory
       {
         SubModuleInfo? subModule = null;
         var options = command.Data.Options;
-        
+
         foreachStart:
         foreach (var option in options)
-        {
           switch (option.Type)
           {
             case ApplicationCommandOptionType.SubCommandGroup:
-              subModule = subModule?.SubGroups.GetValueOrDefault(option.Name) ?? moduleInfo.SubGroups.GetValueOrDefault(option.Name);
+              subModule = subModule?.SubGroups.GetValueOrDefault(option.Name) ??
+                          moduleInfo.SubGroups.GetValueOrDefault(option.Name);
               options = option.Options;
               goto foreachStart;
             case ApplicationCommandOptionType.SubCommand:
-              var commandInfo = subModule?.SubCommands.GetValueOrDefault(option.Name) ?? moduleInfo.SubCommands.GetValueOrDefault(option.Name);
+              var commandInfo = subModule?.SubCommands.GetValueOrDefault(option.Name) ??
+                                moduleInfo.SubCommands.GetValueOrDefault(option.Name);
               var parameters = new object?[commandInfo.Parameters.Count];
 
-              for (int i = 0; i < parameters.Length; i++)
+              for (var i = 0; i < parameters.Length; i++)
               {
                 var parameter = commandInfo.Parameters[i];
                 var realType = ParameterChecker.ReverseMappingType(parameter.OptionType);
-                if (realType == null) 
+                if (realType == null)
                   throw new ReceivedDataException($"Doesn't support {parameter.OptionType}");
-                var receivedData = options.SingleOrDefault(x => x.Name == parameter.Name && x.Type == parameter.OptionType);
+                var receivedData =
+                  options.SingleOrDefault(x => x.Name == parameter.Name && x.Type == parameter.OptionType);
                 if (receivedData == null)
                   throw new ReceivedDataException($"Option {parameter.Name} doesn't received");
                 var receivedValue = receivedData.Value;
@@ -107,7 +104,6 @@ namespace CommandFactory
               commandInfo.Method.Invoke((object?)subModule?.Module ?? moduleInfo.Module, parameters);
               break;
           }
-        }
       }
     }
 
@@ -118,15 +114,9 @@ namespace CommandFactory
         .WithDescription(info.Description)
         .WithType(ApplicationCommandOptionType.SubCommandGroup);
 
-      foreach (var subGroup in info.SubGroups)
-      {
-        option.AddOption(await BuildGroups(subGroup.Value));
-      }
+      foreach (var subGroup in info.SubGroups) option.AddOption(await BuildGroups(subGroup.Value));
 
-      foreach (var subCommand in info.SubCommands)
-      {
-        option.AddOption(await BuildSubCommand(subCommand.Value));
-      }
+      foreach (var subCommand in info.SubCommands) option.AddOption(await BuildSubCommand(subCommand.Value));
 
       return option;
     }
@@ -139,9 +129,7 @@ namespace CommandFactory
         .WithType(ApplicationCommandOptionType.SubCommand);
 
       foreach (var parameter in subCommand.Parameters)
-      {
         option.AddOption(parameter.Name, parameter.OptionType, parameter.Description, parameter.IsRequire);
-      }
 
       return option;
     }

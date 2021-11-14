@@ -7,6 +7,7 @@ namespace CommandFactory
   public class SlashModule : IModule
   {
     protected SocketSlashCommand Command;
+
     void IModule.SetCommand(SocketSlashCommand command)
     {
       Command = command;
@@ -21,6 +22,7 @@ namespace CommandFactory
   public class SubSlashGroupModule : IModule
   {
     protected SocketSlashCommand Command;
+
     void IModule.SetCommand(SocketSlashCommand command)
     {
       Command = command;

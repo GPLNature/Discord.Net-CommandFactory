@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using Discord;
@@ -23,7 +22,7 @@ namespace CommandFactory
         { typeof(IRole), ApplicationCommandOptionType.Role },
         { typeof(IMentionable), ApplicationCommandOptionType.Mentionable },
         { typeof(float), ApplicationCommandOptionType.Number },
-        { typeof(double), ApplicationCommandOptionType.Number },
+        { typeof(double), ApplicationCommandOptionType.Number }
       }.ToImmutableDictionary();
 
     public static ApplicationCommandOptionType? MappingType(ParameterInfo info)
