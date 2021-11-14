@@ -21,13 +21,9 @@ namespace CommandFactory
       var modules = new List<ModuleInfo>();
 
       foreach (var typeInfo in assembly.DefinedTypes)
-      {
         if (typeInfo.IsPublic || typeInfo.IsNestedPublic)
-        {
           if (IsValidModuleDefinition(typeInfo))
             modules.Add(BuildModule(typeInfo));
-        }
-      }
 
       return modules;
     }
@@ -41,17 +37,15 @@ namespace CommandFactory
           IsValidExecutorDefinition(info) || IsValidSubCommandDefinition(info));
       var commandAttribute = commandClass.GetCustomAttribute<CommandAttribute>();
       var commandName = commandAttribute?.Name ?? throw new LoadException("Command Name can't be empty string or null");
-      var description = commandClass.GetCustomAttribute<DescriptionAttribute>()?.Description ?? throw new LoadException("Description cannot be blank or null");
+      var description = commandClass.GetCustomAttribute<DescriptionAttribute>()?.Description ??
+                        throw new LoadException("Description cannot be blank or null");
       if (description.Length == 0)
         throw new LoadException("Description cannot be blank or null");
 
       // Build SubCommandGroup
       var subGroups = new List<SubModuleInfo>();
 
-      foreach (var subGroup in subGroupTypes)
-      {
-        subGroups.Add(BuildSubModule(subGroup));
-      }
+      foreach (var subGroup in subGroupTypes) subGroups.Add(BuildSubModule(subGroup));
 
       // Build Commands
       var executors = commandMethods.Where(IsValidExecutorDefinition).FirstOrDefault();
@@ -76,17 +70,15 @@ namespace CommandFactory
       var subCommandMethods = groupClass.DeclaredMethods.Where(IsValidSubCommandDefinition);
       var commandAttribute = groupClass.GetCustomAttribute<SubCommandGroupAttribute>();
       var commandName = commandAttribute?.Name ?? throw new LoadException("Command Name can't be empty string or null");
-      var description = groupClass.GetCustomAttribute<DescriptionAttribute>()?.Description ?? throw new LoadException("Description cannot be blank or null");
+      var description = groupClass.GetCustomAttribute<DescriptionAttribute>()?.Description ??
+                        throw new LoadException("Description cannot be blank or null");
       if (description.Length == 0)
         throw new LoadException("Description cannot be blank or null");
-      
+
       // Build SubCommandGroup
       var subGroups = new List<SubModuleInfo>();
 
-      foreach (var subGroup in subGroupTypes)
-      {
-        subGroups.Add(BuildSubModule(subGroup));
-      }
+      foreach (var subGroup in subGroupTypes) subGroups.Add(BuildSubModule(subGroup));
 
       // Build Command
       var commands = subCommandMethods.Select(BuildSubCommand).ToList();
@@ -107,7 +99,6 @@ namespace CommandFactory
       var attributes = info.GetCustomAttributes();
 
       foreach (var attribute in attributes) // check the attribute of method
-      {
         switch (attribute)
         {
           case SubCommandAttribute subCommandAttr:
@@ -117,7 +108,6 @@ namespace CommandFactory
             description = descriptionAttr.Description;
             break;
         }
-      }
 
       if (description.Length == 0)
         throw new LoadException($"Description cannot be blank or null on {info.Name}");
@@ -139,7 +129,7 @@ namespace CommandFactory
           throw new ParameterMappingException(
             $"Parameter can't match type on {info.Name} method parameter name : {parameter.Name}");
         var description = parameter.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "";
-        
+
         if (description.Length == 0)
           throw new LoadException("Description cannot be blank or null");
 
@@ -150,29 +140,42 @@ namespace CommandFactory
       return parameters;
     }
 
-    private static bool IsValidMethodDefinition(MethodInfo methodInfo, Type target) => methodInfo.IsDefined(target) &&
-      methodInfo.ReturnType == typeof(Task) &&
-      !methodInfo.IsStatic &&
-      !methodInfo.IsGenericMethod;
+    private static bool IsValidMethodDefinition(MethodInfo methodInfo, Type target)
+    {
+      return methodInfo.IsDefined(target) &&
+             methodInfo.ReturnType == typeof(Task) &&
+             !methodInfo.IsStatic &&
+             !methodInfo.IsGenericMethod;
+    }
 
-    private static bool IsValidSubCommandDefinition(MethodInfo methodInfo) =>
-      IsValidMethodDefinition(methodInfo, typeof(SubCommandAttribute));
+    private static bool IsValidSubCommandDefinition(MethodInfo methodInfo)
+    {
+      return IsValidMethodDefinition(methodInfo, typeof(SubCommandAttribute));
+    }
 
-    private static bool IsValidExecutorDefinition(MethodInfo methodInfo) =>
-      IsValidMethodDefinition(methodInfo, typeof(ExecuteAttribute));
+    private static bool IsValidExecutorDefinition(MethodInfo methodInfo)
+    {
+      return IsValidMethodDefinition(methodInfo, typeof(ExecuteAttribute));
+    }
 
-    private static bool IsValidModuleDefinition(TypeInfo typeInfo) =>
-      ModuleTypeInfo.IsAssignableFrom(typeInfo) && IsValidCommand(typeInfo) &&
-      !typeInfo.IsAbstract &&
-      !typeInfo.ContainsGenericParameters;
+    private static bool IsValidModuleDefinition(TypeInfo typeInfo)
+    {
+      return ModuleTypeInfo.IsAssignableFrom(typeInfo) && IsValidCommand(typeInfo) &&
+             !typeInfo.IsAbstract &&
+             !typeInfo.ContainsGenericParameters;
+    }
 
-    private static bool IsValidCommand(TypeInfo typeInfo) =>
-      typeInfo.DeclaredMethods.Any(info => IsValidExecutorDefinition(info) || IsValidExecutorDefinition(info)) &&
-      typeInfo.GetCustomAttribute<CommandAttribute>() != null;
+    private static bool IsValidCommand(TypeInfo typeInfo)
+    {
+      return typeInfo.DeclaredMethods.Any(info => IsValidExecutorDefinition(info) || IsValidExecutorDefinition(info)) &&
+             typeInfo.GetCustomAttribute<CommandAttribute>() != null;
+    }
 
-    private static bool IsValidSubGroups(TypeInfo typeInfo) =>
-      SubModuleTypeInfo.IsAssignableFrom(typeInfo) &&
-      typeInfo.DeclaredMethods.Any(IsValidSubCommandDefinition) &&
-      typeInfo.GetCustomAttribute<SubCommandGroupAttribute>() != null;
+    private static bool IsValidSubGroups(TypeInfo typeInfo)
+    {
+      return SubModuleTypeInfo.IsAssignableFrom(typeInfo) &&
+             typeInfo.DeclaredMethods.Any(IsValidSubCommandDefinition) &&
+             typeInfo.GetCustomAttribute<SubCommandGroupAttribute>() != null;
+    }
   }
 }

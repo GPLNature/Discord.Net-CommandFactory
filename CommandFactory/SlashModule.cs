@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 
 namespace CommandFactory
@@ -11,9 +12,9 @@ namespace CommandFactory
       Command = command;
     }
 
-    public virtual void Register(DiscordSocketRestClient client, SlashCommandProperties properties)
+    public virtual async Task Register(DiscordSocketClient client, SlashCommandProperties properties)
     {
-      client.CreateGlobalCommand(properties);
+      await client.CreateGlobalApplicationCommandAsync(properties);
     }
   }
 

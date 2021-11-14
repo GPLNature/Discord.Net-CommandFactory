@@ -14,7 +14,7 @@
     {
     }
   }
-  
+
   internal class EmptyExecutorException : System.Exception
   {
     public EmptyExecutorException()
@@ -29,8 +29,8 @@
     {
     }
   }
-  
-  internal class ReceivedDataException: System.Exception
+
+  internal class ReceivedDataException : System.Exception
   {
     public ReceivedDataException(string? message) : base(message)
     {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
@@ -6,7 +7,9 @@ using System.Threading.Tasks;
 using CommandFactory.Exception;
 using CommandFactory.Info;
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 
 namespace CommandFactory
 {
@@ -25,7 +28,7 @@ namespace CommandFactory
       return new CommandManager(modules);
     }
 
-    public async Task BuildAndInstallModulesAsync(BaseSocketClient client)
+    public async Task BuildAndInstallModulesAsync(DiscordSocketClient client)
     {
       foreach (var (_, module) in _module)
       {
@@ -44,7 +47,15 @@ namespace CommandFactory
           command.AddOption(await BuildGroups(subGroup.Value));
         }
 
-        module.Module.Register(client.Rest, command.Build());
+        try
+        {
+          await module.Module.Register(client, command.Build());
+        }
+        catch (ApplicationCommandException ex)
+        {
+          var json = JsonConvert.SerializeObject(ex.Error, Formatting.Indented);
+          Console.WriteLine(json);
+        }
       }
 
       client.SlashCommandExecuted += ClientOnSlashCommandExecuted;

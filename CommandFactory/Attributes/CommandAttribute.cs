@@ -2,7 +2,6 @@
 
 namespace CommandFactory.Attributes
 {
-  
   [AttributeUsage(AttributeTargets.Class)]
   public class CommandAttribute : Attribute
   {
