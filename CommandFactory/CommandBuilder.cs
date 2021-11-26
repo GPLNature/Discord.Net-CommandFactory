@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using CommandFactory.Attributes;
 using CommandFactory.Exception;
@@ -16,8 +17,9 @@ namespace CommandFactory
     private static readonly TypeInfo ModuleTypeInfo = typeof(SlashModule).GetTypeInfo();
     private static readonly TypeInfo SubModuleTypeInfo = typeof(SubSlashGroupModule).GetTypeInfo();
 
-    public static async Task<List<ModuleInfo>> BuildAsync(Assembly assembly)
+    public static async Task<List<ModuleInfo>> BuildAsync(Assembly assembly, int threadCount = 5, int completionPortThreads = 5)
     {
+      ThreadPool.SetMaxThreads(threadCount, completionPortThreads);
       var modules = new List<ModuleInfo>();
 
       foreach (var typeInfo in assembly.DefinedTypes)
@@ -134,7 +136,7 @@ namespace CommandFactory
           throw new LoadException("Description cannot be blank or null");
 
         parameters.Add(new ParameterInfo(parameter.Name ?? "Unknown", description, optionType.Value,
-          parameter.DefaultValue, parameter.IsOptional));
+          parameter.DefaultValue, parameter.ParameterType, parameter.IsOptional));
       }
 
       return parameters;

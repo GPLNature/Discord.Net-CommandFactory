@@ -31,11 +31,5 @@ namespace CommandFactory
         return result;
       return null;
     }
-
-    public static Type? ReverseMappingType(ApplicationCommandOptionType type)
-    {
-      var application = Mapper.SingleOrDefault(x => x.Value == type);
-      return application.Equals(default(KeyValuePair<Type, ApplicationCommandOptionType>)) ? null : application.Key;
-    }
   }
 }

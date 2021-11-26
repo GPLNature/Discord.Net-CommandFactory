@@ -3,24 +3,14 @@ using System.Collections.Immutable;
 
 namespace CommandFactory.Info
 {
-  internal readonly struct ModuleInfo
+  internal class ModuleInfo : IModuleInfo
   {
-    public readonly string Name;
-    public readonly string Description;
-    public readonly SlashModule Module;
     public readonly CommandInfo Executor;
-    public readonly ImmutableDictionary<string, CommandInfo> SubCommands;
-    public readonly ImmutableDictionary<string, SubModuleInfo> SubGroups;
 
-    public ModuleInfo(string name, string description, SlashModule module, CommandInfo executor,
-      List<CommandInfo> subCommands, List<SubModuleInfo> subGroups)
+    public ModuleInfo(string name, string description, IModule module, CommandInfo executor,
+      IEnumerable<CommandInfo> subCommands, List<SubModuleInfo> subGroups) : base(name, description, module, subCommands, subGroups)
     {
-      Name = name;
-      Description = description;
-      Module = module;
       Executor = executor;
-      SubCommands = subCommands.ToImmutableDictionary(x => x.Name);
-      SubGroups = subGroups.ToImmutableDictionary(x => x.Name);
     }
   }
 }
