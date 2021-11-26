@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -36,7 +37,7 @@ namespace CommandFactory
         .Where(IsValidSubGroups);
       var commandMethods =
         commandClass.DeclaredMethods.Where(info =>
-          IsValidExecutorDefinition(info) || IsValidSubCommandDefinition(info));
+          IsValidExecutorDefinition(info) || IsValidSubCommandDefinition(info)).ToImmutableList();
       var commandAttribute = commandClass.GetCustomAttribute<CommandAttribute>();
       var commandName = commandAttribute?.Name ?? throw new LoadException("Command Name can't be empty string or null");
       var description = commandClass.GetCustomAttribute<DescriptionAttribute>()?.Description ??
@@ -45,9 +46,7 @@ namespace CommandFactory
         throw new LoadException("Description cannot be blank or null");
 
       // Build SubCommandGroup
-      var subGroups = new List<SubModuleInfo>();
-
-      foreach (var subGroup in subGroupTypes) subGroups.Add(BuildSubModule(subGroup));
+      var subGroups = subGroupTypes.Select(BuildSubModule).ToList();
 
       // Build Commands
       var executors = commandMethods.Where(IsValidExecutorDefinition).FirstOrDefault();
@@ -131,12 +130,13 @@ namespace CommandFactory
           throw new ParameterMappingException(
             $"Parameter can't match type on {info.Name} method parameter name : {parameter.Name}");
         var description = parameter.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "";
+        var options = parameter.GetCustomAttribute<OptionAttribute>();
 
         if (description.Length == 0)
           throw new LoadException("Description cannot be blank or null");
 
         parameters.Add(new ParameterInfo(parameter.Name ?? "Unknown", description, optionType.Value,
-          parameter.DefaultValue, parameter.ParameterType, parameter.IsOptional));
+          parameter.DefaultValue, parameter.ParameterType, new Options(options)));
       }
 
       return parameters;

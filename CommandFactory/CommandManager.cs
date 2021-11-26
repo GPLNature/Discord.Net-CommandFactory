@@ -11,6 +11,7 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
+using ParameterInfo = CommandFactory.Info.ParameterInfo;
 
 namespace CommandFactory
 {
@@ -41,7 +42,7 @@ namespace CommandFactory
 
           // Build Options
           foreach (var parameter in module.Executor.Parameters)
-            command.AddOption(parameter.Name, parameter.OptionType, parameter.Description, parameter.IsRequire);
+            command.AddOption(BuildParameter(parameter));
 
           foreach (var subGroup in module.SubGroups) command.AddOption(await BuildGroups(subGroup.Value));
 
@@ -144,7 +145,20 @@ namespace CommandFactory
       return option;
     }
 
-    private async Task<SlashCommandOptionBuilder> BuildSubCommand(CommandInfo subCommand)
+    private SlashCommandOptionBuilder BuildParameter(ParameterInfo info)
+    {
+      var option = new SlashCommandOptionBuilder()
+        .WithName(info.Name)
+        .WithDescription(info.Description)
+        .WithRequired(info.Options.IsRequire)
+        .WithAutocomplete(info.Options.IsAutoComplete)
+        .WithDefault(info.Options.IsDefault)
+        .WithType(ApplicationCommandOptionType.SubCommand);
+
+      return option;
+    }
+
+    private Task<SlashCommandOptionBuilder> BuildSubCommand(CommandInfo subCommand)
     {
       var option = new SlashCommandOptionBuilder()
         .WithName(subCommand.Name)
@@ -152,9 +166,9 @@ namespace CommandFactory
         .WithType(ApplicationCommandOptionType.SubCommand);
 
       foreach (var parameter in subCommand.Parameters)
-        option.AddOption(parameter.Name, parameter.OptionType, parameter.Description, parameter.IsRequire);
+        option.AddOption(BuildParameter(parameter));
 
-      return option;
+      return Task.FromResult(option);
     }
   }
 }

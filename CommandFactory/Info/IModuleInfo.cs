@@ -12,7 +12,7 @@ namespace CommandFactory.Info
     public readonly ImmutableDictionary<string, SubModuleInfo> SubGroups;
 
     public IModuleInfo(string name, string description, IModule module, IEnumerable<CommandInfo> subCommands,
-      List<SubModuleInfo> subGroups)
+      IEnumerable<SubModuleInfo> subGroups)
     {
       Name = name;
       Description = description;

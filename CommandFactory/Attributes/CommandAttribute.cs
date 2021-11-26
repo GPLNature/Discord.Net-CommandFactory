@@ -39,4 +39,19 @@ namespace CommandFactory.Attributes
       Name = name;
     }
   }
+  
+  [AttributeUsage(AttributeTargets.Parameter)]
+  public class OptionAttribute : Attribute
+  {
+    internal bool IsAutoComplete;
+    internal bool IsRequire;
+    internal bool IsDefault;
+    public OptionAttribute(bool isAutoComplete = false, bool isRequire = false, bool isDefault = false)
+    {
+      IsAutoComplete = isAutoComplete;
+      IsRequire = isRequire;
+      IsDefault = isDefault;
+    }
+
+  }
 }
